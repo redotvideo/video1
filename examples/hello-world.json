@@ -1,0 +1,14 @@
+{
+	"objects": [
+		{
+			"type": "text",
+			"startTime": 0,
+			"endTime": 5,
+			"position": {"x": 0, "y": 0},
+			"color": "white",
+			"fontSize": 50,
+			"fontFamily": "Roboto",
+			"textContent": "hello world"
+		}
+	]
+}
