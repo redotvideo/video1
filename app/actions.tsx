@@ -3,9 +3,17 @@
 import OpenAI from 'openai';
 import axios from 'axios';
 import * as fs from 'fs';
+import path from 'path';
 import {createClient} from '@deepgram/sdk';
 
-import {AiImageAsset, Asset, AssetState, VoiceoverAsset} from '../revideo/scene';
+import {
+	AiImageAsset,
+	Asset,
+	AssetState,
+	StockImageAsset,
+	StockVideoAsset,
+	VoiceoverAsset,
+} from '../revideo/types';
 
 const deepgram = createClient(process.env['DEEPGRAM_API_KEY'] || '');
 
@@ -25,10 +33,16 @@ export interface SceneDefinition {
 	objects: SceneObject[];
 }
 
-type SceneObject = TextObject | ShapeObject | ImageObject | VideoObject;
+export type SceneObject =
+	| TextObject
+	| ShapeObject
+	| ImageObject
+	| VideoObject
+	| AudioObject
+	| SubtitleObject;
 
 export interface BaseSceneObject {
-	type: 'text' | 'rect' | 'image' | 'video';
+	type: 'text' | 'rect' | 'image' | 'video' | 'audio' | 'subtitle';
 	startTime: number; // at which second the object appears
 	endTime: number; // at which second the object disappears, has to be higher than startTime
 	position: {x: number; y: number}; // 0,0 is center of video. If you have a 1920x1080 video, the top right corner is {x: 960, y: -540}.
@@ -38,12 +52,12 @@ export interface BaseSceneObject {
 	animations?: Animation[]; // general animations, like scaling up or moving objects to specific coordinates
 }
 
-interface AppearAnimation {
+export interface AppearAnimation {
 	type: 'fade' | 'scale';
 	duration: number;
 }
 
-export type Length = number | \`\${number}%\`;
+export type Length = number | `${number}%`;
 
 export interface TextObject extends BaseSceneObject {
 	type: 'text';
@@ -52,45 +66,56 @@ export interface TextObject extends BaseSceneObject {
 	textContent: string; // the actual text
 }
 
-interface ShapeObject extends BaseSceneObject {
+export interface ShapeObject extends BaseSceneObject {
 	type: 'rect';
 	width: Length;
 	height: Length;
 }
 
-interface ImageObject extends BaseSceneObject {
+export interface ImageObject extends BaseSceneObject {
 	type: 'image';
 	src: string;
 	width?: Length; // Optional width and height for the image. You may want to specify only one of them to maintain the aspect ratio.
 	height?: Length;
 }
 
-interface VideoObject extends BaseSceneObject {
+export interface VideoObject extends BaseSceneObject {
 	type: 'video';
 	src: string;
 	videoStartTime?: number; // At which second the video should start playing. Defaults to 0.
-	duration: number; // For how long the video should play from the startTime in seconds.
 	height?: Length; // Optional height for the video. You may want to specify only one of them to maintain the aspect ratio.
 	width?: Length;
 }
 
-interface Animation {
+export interface AudioObject extends BaseSceneObject {
+	type: 'audio';
+	src: string;
+	audioStartTime?: number; // At which second the audio should start playing. Defaults to 0.
+}
+
+export interface SubtitleObject {
+	type: 'subtitle';
+	startTime: number;
+	words: VoiceoverAsset['properties']['words'];
+}
+
+export interface Animation {
 	type: 'moveTo' | 'changeOpacity' | 'scale';
 	options: MoveToAnimationOptions | OpacityAnimationOptions | ScaleAnimationOptions;
 	startTime: number;
 	endTime: number;
 }
 
-interface MoveToAnimationOptions {
+export interface MoveToAnimationOptions {
 	x: number; // for x and y, we only indicate the diff with respect to the current position, not the absolute position, so this is relative to the actual position value
 	y: number;
 }
 
-interface OpacityAnimationOptions {
+export interface OpacityAnimationOptions {
 	targetOpacity: number;
 }
 
-interface ScaleAnimationOptions {
+export interface ScaleAnimationOptions {
 	targetScale: number; // refers to the factor the size is scaled by, e.g. two means double of the original size
 }
 
@@ -100,28 +125,50 @@ export interface AssetState {
 	assets: Asset[];
 }
 
-export interface Asset {
-	type: 'voiceover' | 'ai_image';
-	asset: VoiceoverAsset | AiImageAsset;
-}
+export type Asset = VoiceoverAsset | AiImageAsset | StockImageAsset | StockVideoAsset;
 
 export interface VoiceoverAsset {
+	type: 'voiceover';
 	instructions: {
 		text: string;
 		voice: 'Sarah' | 'Michael';
 	};
-	properties?: {
+	properties: {
 		filePath: string; // path to the audio file of the voiceover
 		words: WordInfo[]; // word timestamps
 	};
 }
 
 export interface AiImageAsset {
+	type: 'ai_image';
 	instructions: {
 		prompt: string;
 	};
 	properties?: {
 		filePath: string; // path to the audio file of the voiceover
+	};
+}
+export interface StockImageAsset {
+	type: 'stock_image';
+	instructions: {
+		prompt: string;
+		orientation: 'horizontal' | 'vertical';
+	};
+	properties?: {
+		filePath: string;
+	};
+}
+
+export interface StockVideoAsset {
+	type: 'stock_video';
+	instructions: {
+		prompt: string;
+	};
+	properties?: {
+		filePath: string;
+		duration: number;
+		width: number;
+		height: number;
 	};
 }
 
@@ -130,6 +177,7 @@ export interface WordInfo {
 	start: number; // start time in seconds
 	end: number;
 }
+
 \`\`\`
 
 
@@ -145,39 +193,60 @@ Here is a definition of all assets you can create:
 // Assets can be generated by instructions from the AI assistant
 
 export interface AssetState {
-    assets: Asset[];
+	assets: Asset[];
 }
 
-export interface Asset {
-    type: "voiceover" | "ai_image";
-    asset: VoiceoverAsset | AiImageAsset;
-}
+export type Asset = VoiceoverAsset | AiImageAsset | StockImageAsset | StockVideoAsset;
 
 export interface VoiceoverAsset {
-    instructions: {
-        text: string;
-        voice: "Sarah" | "Michael";
-    }
-    properties?: {
-        filePath: string; // path to the audio file of the voiceover
-        words: WordInfo[] // word timestamps
-    }
+	type: 'voiceover';
+	instructions: {
+		text: string;
+		voice: 'Sarah' | 'Michael';
+	};
+	properties?: {
+		filePath: string; // path to the audio file of the voiceover
+		words: WordInfo[]; // word timestamps
+	};
 }
 
 export interface AiImageAsset {
-    instructions: {
-        prompt: string;
-    }
-    properties?: {
-        filePath: string; // path to the audio file of the voiceover
-        words: WordInfo[] // word timestamps
-    }
+	type: 'ai_image';
+	instructions: {
+		prompt: string;
+	};
+	properties?: {
+		filePath: string; // path to the audio file of the voiceover
+	};
+}
+export interface StockImageAsset {
+	type: 'stock_image';
+	instructions: {
+		prompt: string;
+		orientation: 'horizontal' | 'vertical';
+	};
+	properties?: {
+		filePath: string;
+	}
+}
+
+export interface StockVideoAsset {
+	type: 'stock_video';
+	instructions: {
+		prompt: string;
+	};
+	properties?: {
+		filePath: string;
+		duration: number;
+		width: number;
+		height: number;
+	}
 }
 
 export interface WordInfo {
-    word: string;
-    start: number; // start time in seconds
-    end: number;
+	word: string;
+	start: number; // start time in seconds
+	end: number;
 }
 \`\`\`
 
@@ -227,8 +296,9 @@ export async function sendInstructionToGPT(
 			}
 
 			if (jsonResponse.assets) {
-				const assets = await handleAssetGeneration(jsonResponse.assets);
-				const response = sendInstructionToGPT(instruction, sceneState, {assets: assets});
+				const newAssets = await handleAssetGeneration(jsonResponse.assets);
+				const updatedAssets = {assets: [...assets.assets, ...newAssets]};
+				const response = await sendInstructionToGPT(instruction, sceneState, updatedAssets);
 				return response;
 			}
 
@@ -253,6 +323,14 @@ async function handleAssetGeneration(assets: Asset[]): Promise<Asset[]> {
 			const asset = await voiceover(a.instructions);
 			generatedAssets.push(asset);
 		}
+		if (a.type === 'stock_image') {
+			const asset = await downloadPixabayImage(a.instructions);
+			generatedAssets.push(asset);
+		}
+		if (a.type === 'stock_video') {
+			const asset = await downloadPixabayVideo(a.instructions);
+			generatedAssets.push(asset);
+		}
 	}
 
 	return generatedAssets;
@@ -260,12 +338,33 @@ async function handleAssetGeneration(assets: Asset[]): Promise<Asset[]> {
 
 async function generateImage({prompt}: AiImageAsset['instructions']): Promise<AiImageAsset> {
 	const jobId = crypto.randomUUID();
-	const filePath = `./public/${jobId}-image.png`;
+	const filePath = `${jobId}-image.png`;
+
+	await dalleGenerate(prompt, `./public/${filePath}`);
 
 	return {
 		type: 'ai_image',
 		instructions: {prompt},
 		properties: {filePath},
+	};
+}
+
+export async function voiceover({
+	text,
+	voice,
+}: VoiceoverAsset['instructions']): Promise<VoiceoverAsset> {
+	const jobId = crypto.randomUUID();
+	const filePath = `${jobId}-audio.wav`;
+	await generateAudio(text, voice, `./public/${filePath}`);
+	const unprocessedWords = await getWordTimestamps(`./public/${filePath}`);
+	const words = processWordTimestamps(unprocessedWords);
+
+	console.log('words', words);
+
+	return {
+		type: 'voiceover',
+		instructions: {text, voice: voice as any},
+		properties: {filePath, words},
 	};
 }
 
@@ -287,25 +386,6 @@ function findOutermostJSON(str: string): string | null {
 	}
 
 	return null;
-}
-
-export async function voiceover({
-	text,
-	voice,
-}: VoiceoverAsset['instructions']): Promise<VoiceoverAsset> {
-	const jobId = crypto.randomUUID();
-	const filePath = `./public/${jobId}-audio.wav`;
-	await generateAudio(text, voice, filePath);
-	const unprocessedWords = await getWordTimestamps(filePath);
-	const words = processWordTimestamps(unprocessedWords);
-
-	console.log('words', words);
-
-	return {
-		type: 'voiceover',
-		instructions: {text, voice: voice as any},
-		properties: {filePath, words},
-	};
 }
 
 function processWordTimestamps(words: any[]): any[] {
@@ -396,5 +476,95 @@ export async function dalleGenerate(prompt: string, savePath: string) {
 	} catch (error) {
 		console.error('Error saving the file:', error);
 		throw error; // Rethrow the error so it can be handled by the caller
+	}
+}
+
+export async function downloadPixabayImage({
+	prompt,
+	orientation,
+}: StockImageAsset['instructions']): Promise<StockImageAsset> {
+	const apiKey = process.env.PIXABAY_API_KEY || '46433167-3479f6d15735811fd862c2ab8';
+	const baseUrl = 'https://pixabay.com/api/';
+
+	const params = new URLSearchParams({
+		key: apiKey,
+		q: encodeURIComponent(prompt),
+		...{orientation},
+	});
+
+	try {
+		const response = await axios.get(`${baseUrl}?${params.toString()}`);
+		const data = response.data;
+
+		if (data.hits && data.hits.length > 0) {
+			const image = data.hits[0];
+			const imageUrl = image.largeImageURL;
+			const imageResponse = await axios.get(imageUrl, {responseType: 'arraybuffer'});
+			const buffer = Buffer.from(imageResponse.data, 'binary');
+
+			const fileName = `pixabay-${image.id}.jpg`;
+			const filePath = path.join('./public', fileName);
+			await fs.promises.writeFile(filePath, buffer);
+
+			return {
+				type: 'stock_image',
+				instructions: {
+					prompt,
+					orientation,
+				},
+				properties: {
+					filePath: fileName,
+				},
+			};
+		} else {
+			throw new Error('No images found for the given query');
+		}
+	} catch (error) {
+		console.error('Error downloading Pixabay image:', error);
+		throw error;
+	}
+}
+
+export async function downloadPixabayVideo({prompt}: {prompt: string}): Promise<StockVideoAsset> {
+	const apiKey = process.env.PIXABAY_API_KEY || '46433167-3479f6d15735811fd862c2ab8';
+	const baseUrl = 'https://pixabay.com/api/videos/';
+
+	const params = new URLSearchParams({
+		key: apiKey,
+		q: encodeURIComponent(prompt),
+	});
+
+	try {
+		const response = await axios.get(`${baseUrl}?${params.toString()}`);
+		const data = response.data;
+
+		if (data.hits && data.hits.length > 0) {
+			const video = data.hits[0];
+			const videoUrl = video.videos.large.url; // Using the large version
+			const videoResponse = await axios.get(videoUrl, {responseType: 'arraybuffer'});
+			const buffer = Buffer.from(videoResponse.data, 'binary');
+
+			const fileName = `pixabay-video-${video.id}.mp4`;
+			const filePath = path.join('./public', fileName);
+			await fs.promises.writeFile(filePath, buffer);
+
+			return {
+				type: 'stock_video',
+				instructions: {
+					prompt,
+				},
+				properties: {
+					filePath: fileName,
+					duration: video.duration,
+					width: video.videos.large.width,
+					height: video.videos.large.height,
+				},
+			};
+		} else {
+			throw new Error('No videos found for the given query');
+		}
+	} catch (error) {
+		console.error('Error downloading Pixabay video:', error);
+		throw error;
 	}
 }
