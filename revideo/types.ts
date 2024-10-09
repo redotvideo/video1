@@ -94,7 +94,7 @@ export interface AssetState {
 	assets: Asset[];
 }
 
-export type Asset = VoiceoverAsset | AiImageAsset;
+export type Asset = VoiceoverAsset | AiImageAsset | StockImageAsset | StockVideoAsset;
 
 export interface VoiceoverAsset {
 	type: 'voiceover';
@@ -115,6 +115,29 @@ export interface AiImageAsset {
 	};
 	properties?: {
 		filePath: string; // path to the audio file of the voiceover
+	};
+}
+export interface StockImageAsset {
+	type: 'stock_image';
+	instructions: {
+		prompt: string;
+		orientation: 'horizontal' | 'vertical';
+	};
+	properties?: {
+		filePath: string;
+	};
+}
+
+export interface StockVideoAsset {
+	type: 'stock_video';
+	instructions: {
+		prompt: string;
+	};
+	properties?: {
+		filePath: string;
+		duration: number;
+		width: number;
+		height: number;
 	};
 }
 

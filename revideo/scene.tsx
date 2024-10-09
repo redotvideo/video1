@@ -64,7 +64,6 @@ function* showElement(view: View2D, object: SceneObject) {
 	}
 
 	const durationToShow = getDurationToShow(object);
-
 	const Component = objectTypes[object.type];
 
 	const ref = createRef() as Reference<typeof Component>;
@@ -111,6 +110,7 @@ function* showElement(view: View2D, object: SceneObject) {
 			...(object.height && {height: object.height}),
 		};
 	}
+
 	if (object.type === 'audio') {
 		props = {
 			...props,
