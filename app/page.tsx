@@ -6,7 +6,7 @@ import {useState} from 'react';
 import {LoaderCircle} from 'lucide-react';
 import {parseStream} from '../utils/parse';
 import project from '@/revideo/project';
-import {AssetState} from '@/revideo/scene';
+import {AssetState} from '@/revideo/types';
 
 function Button({
 	children,
@@ -173,6 +173,7 @@ export default function Home() {
 						<option value="background-video">Background Video</option>
 						<option value="external-image">External Image</option>
 						<option value="scary-dino">Scary Dino</option>
+						<option value="scary-dino-subtitle">Scary Dino Subtitle</option>
 					</select>
 					<Button onClick={handleSendInstruction} loading={gptLoading}>
 						Send Instruction

@@ -5,7 +5,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import {createClient} from '@deepgram/sdk';
 
-import {AiImageAsset, Asset, AssetState, VoiceoverAsset} from '../revideo/scene';
+import {AiImageAsset, Asset, AssetState, VoiceoverAsset} from '../revideo/types';
 
 const deepgram = createClient(process.env['DEEPGRAM_API_KEY'] || '');
 
