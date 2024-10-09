@@ -1,15 +1,15 @@
 /** @jsxImportSource @revideo/2d/lib */
-import {Img, Layout, Rect, Txt, View2D, makeScene2D} from '@revideo/2d';
+import {Img, Layout, Rect, Txt, Video, View2D, makeScene2D} from '@revideo/2d';
 import {all, Reference, createRef, useScene, chain, waitFor} from '@revideo/core';
 
 interface SceneDefinition {
 	objects: SceneObject[];
 }
 
-type SceneObject = TextObject | ShapeObject | ImageObject;
+type SceneObject = TextObject | ShapeObject | ImageObject | VideoObject;
 
 interface BaseSceneObject {
-	type: 'text' | 'rect' | 'image';
+	type: 'text' | 'rect' | 'image' | 'video';
 	startTime: number; // at which second the object appears
 	endTime: number; // at which second the object disappears, has to be higher than startTime
 	position: {x: number; y: number}; // 0,0 is center of video. If you have a 1920x1080 video, the top right corner is {x: 960, y: -540}.
@@ -24,6 +24,8 @@ interface AppearAnimation {
 	duration: number;
 }
 
+export type Length = number | `${number}%`;
+
 interface TextObject extends BaseSceneObject {
 	type: 'text';
 	fontSize: number; // from 10 to 200
@@ -33,15 +35,24 @@ interface TextObject extends BaseSceneObject {
 
 interface ShapeObject extends BaseSceneObject {
 	type: 'rect';
-	width: number;
-	height: number;
+	width: Length;
+	height: Length;
 }
 
 interface ImageObject extends BaseSceneObject {
 	type: 'image';
 	src: string;
-	width?: number; // Optional width and height for the image. You may want to specify only one of them to maintain the aspect ratio.
-	height?: number;
+	width?: Length; // Optional width and height for the image. You may want to specify only one of them to maintain the aspect ratio.
+	height?: Length;
+}
+
+interface VideoObject extends BaseSceneObject {
+	type: 'video';
+	src: string;
+	videoStartTime?: number; // At which second the video should start playing. Defaults to 0.
+	duration: number; // For how long the video should play from the startTime in seconds.
+	height?: Length; // Optional height for the video. You may want to specify only one of them to maintain the aspect ratio.
+	width?: Length;
 }
 
 interface Animation {
@@ -90,6 +101,7 @@ const objectTypes = {
 	text: Txt,
 	rect: Rect,
 	image: Img,
+	video: Video,
 };
 
 const appearAnimation = {
@@ -141,13 +153,23 @@ function* showElement(view: View2D, object: SceneObject) {
 			...(object.height && {height: object.height}),
 		};
 	}
+	if (object.type === 'video') {
+		props = {
+			...props,
+			src: object.src,
+			time: object.videoStartTime || 0,
+			play: true,
+			...(object.width && {width: object.width}),
+			...(object.height && {height: object.height}),
+		};
+	}
 
 	yield view.add(<Component {...props} />);
 
-	let animationGenerators: any = [];
+	const generators = [];
 
 	if (object.animations) {
-		animationGenerators = buildAnimations(ref as any, object.animations, object);
+		generators.push(...buildAnimations(ref as any, object.animations, object));
 	}
 
 	if (object.appearInAnimation) {
@@ -157,7 +179,7 @@ function* showElement(view: View2D, object: SceneObject) {
 		);
 	}
 
-	yield* all(...[waitFor(durationToShow)], ...animationGenerators);
+	yield* all(...[waitFor(durationToShow)], ...generators);
 
 	if (object.disappearAnimation) {
 		yield* disappearAnimation[object.disappearAnimation.type](
@@ -173,7 +195,7 @@ function* showElement(view: View2D, object: SceneObject) {
 }
 
 function buildAnimations(ref: Reference<Layout>, animations: Animation[], element: SceneObject) {
-	const animationGenerators: any = [];
+	const animationGenerators = [];
 
 	for (const ani of animations) {
 		const waitTime = ani.startTime - element.startTime;

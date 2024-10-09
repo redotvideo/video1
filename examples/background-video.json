@@ -1,6 +1,13 @@
 {
 	"objects": [
 		{
+			"type": "video",
+			"startTime": 0,
+			"endTime": 3,
+			"position": {"x": 0, "y": 0},
+			"src": "https://revideo-example-assets.s3.amazonaws.com/stars.mp4"
+		},
+		{
 			"type": "image",
 			"startTime": 0,
 			"endTime": 5,

@@ -18,8 +18,10 @@ interface SceneDefinition {
 	objects: SceneObject[];
 }
 
-interface SceneObject {
-	type: 'text' | 'rect';
+type SceneObject = TextObject | ShapeObject | ImageObject | VideoObject;
+
+interface BaseSceneObject {
+	type: 'text' | 'rect' | 'image' | 'video';
 	startTime: number; // at which second the object appears
 	endTime: number; // at which second the object disappears, has to be higher than startTime
 	position: {x: number; y: number}; // 0,0 is center of video. If you have a 1920x1080 video, the top right corner is {x: 960, y: -540}.
@@ -34,10 +36,35 @@ interface AppearAnimation {
 	duration: number;
 }
 
-interface TextObject extends SceneObject {
+export type Length = number | \`\${number}%\`;
+
+interface TextObject extends BaseSceneObject {
+	type: 'text';
 	fontSize: number; // from 10 to 200
 	fontFamily: 'Roboto' | 'Luckiest Guy';
 	textContent: string; // the actual text
+}
+
+interface ShapeObject extends BaseSceneObject {
+	type: 'rect';
+	width: Length;
+	height: Length;
+}
+
+interface ImageObject extends BaseSceneObject {
+	type: 'image';
+	src: string;
+	width?: Length; // Optional width and height for the image. You may want to specify only one of them to maintain the aspect ratio.
+	height?: Length;
+}
+
+interface VideoObject extends BaseSceneObject {
+	type: 'video';
+	src: string;
+	videoStartTime?: number; // At which second the video should start playing. Defaults to 0.
+	duration: number; // For how long the video should play from the startTime in seconds.
+	height?: Length; // Optional height for the video. You may want to specify only one of them to maintain the aspect ratio.
+	width?: Length;
 }
 
 interface Animation {
@@ -61,6 +88,11 @@ interface ScaleAnimationOptions {
 }
 \`\`\`
 
+You have the following external srcs available for image and video objects:
+Video:
+- https://revideo-example-assets.s3.amazonaws.com/stars.mp4
+Image:
+- https://revideo-example-assets.s3.amazonaws.com/revideo-logo-white.png
 
 Here is the initial state of the scene:
 
