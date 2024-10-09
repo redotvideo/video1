@@ -1,88 +1,60 @@
 'use server';
 
 import OpenAI from 'openai';
+import fs from 'fs/promises';
+import path from 'path';
+
+
+const FILES = ["./marketing.tsx", "./moving-object.tsx", "./stitch.tsx", "./subtitles.tsx"];
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
+async function readExampleFiles(files: string[]): Promise<string> {
+    const exampleDir = path.join(process.cwd(), 'examples');
+
+    let examples = '';
+    for (const file of files) {
+            const content = await fs.readFile(path.join(exampleDir, file), 'utf-8');
+            examples += `File: ${file}\n\`\`\`tsx\n${content}\n\`\`\`\n\n`;
+    }
+
+    return examples;
+}
+
+
 // { "objects": [ { "text": "Hello World", "fontSize": 50, "fontType": "Roboto", "startTime": 0, "endTime": 3, "appearInAnimation": { "type": "fade", "duration": 1 }, "disappearAnimation": { "type": "fade", "duration": 1 } } ] }
 function buildInstruction(instruction: string, sceneState: any){
     const SYSTEM = `
-You are an AI copilot embedded into a video editor. Users can chat with you to create and edit videos, and your job is to create a JSON video representation that is converted into an actual video. The video format is 1920x1080.
+You are an AI tasked with writing Revideo code to create videos. Revideo is a framework for programmatic video editing that lets you create videos with code. Here are a few example scenes that let you understand how to define videos with it:
 
-Here is the typescript scene definition:
+${readExampleFiles(FILES)}
 
-\`\`\`
-interface AppearAnimation {
-	type: "fade" | "scale";
-	duration: number;
-}
+Here is a descripton of the video you are supposed to create:
 
-interface sceneObject {
-	type: "text" | "rect";
-	startTime: number; // at which second the object appears
-	endTime: number; // at which second the object disappears, has to be higher than startTime
-	position: {x: number, y: number}; // 0,0 is center of video. If you have a 1920x1080 video, the top right corner is {x: 960, y: -540}.
-	color: string; // hex code, or also just "white", "blue", etc.
-	appearInAnimation?: AppearAnimation; // the animation that makes the object appear, e.g. a fade-in
-	disappearAnimation?: AppearAnimation; // the animation that makes the object disappear, e.g. a fade-out
-	animations?: Animation[] // general animations, like scaling up or moving objects to specific coordinates
-}
+${instruction}
 
-interface textObject extends sceneObject {
-	fontSize: number; // from 10 to 200
-	fontFamily: "Roboto" | "Luckiest Guy";
-	textContent: string; // the actual text
-}
-
-interface sceneDefinition {
-	objects: sceneObject[];
-}
-
-interface Animation {
-	type: "moveTo" | "changeOpacity" | "scale";
-	options: MoveToAnimationOptions | OpacityAnimationOptions | ScaleAnimationOptions;
-	startTime: number;
-	endTime: number;
-}
-
-interface MoveToAnimationOptions {
-	x: number; // for x and y, we only indicate the diff with respect to the current position, not the absolute position, so this is relative to the actual position value
-	y: number;
-}
-
-interface OpacityAnimationOptions {
-	targetOpacity: number;
-}
-
-interface ScaleAnimationOptions {
-	targetScale: number; // refers to the factor the size is scaled by, e.g. two means double of the original size
-}
-\`\`\`
-
-
-Here is the initial state of the scene:
-
-\`\`\`
-${JSON.stringify(sceneState)}
-\`\`\`
-
-A user will provide an instruction. You should only return a JSON, importantly JSON representation of the scene which follows the type definition! Here is the user message:
-
-${instruction}`
+Now write the code wrapped like this: \`\`\`tsx <your code> \`\`\`. It should have a default export of makeScene2D. IMPORTANT: Only use the dependencies present in the example scenes and nothing else!!!
+`
 
 return SYSTEM;
 }
 
+
+
+
 export async function sendInstructionToGPT(instruction: string, sceneState: any): Promise<any> {
     try {
+        console.log("sending request");
         const chatCompletion = await openai.chat.completions.create({
             model: "o1-preview",
             messages: [
                 { role: "user", content: buildInstruction(instruction, sceneState)}
             ],
         });
+
+        console.log("prompt", buildInstruction(instruction, sceneState));
     
         console.log("response", chatCompletion.choices[0].message.content);
 
