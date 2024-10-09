@@ -28,7 +28,7 @@ function Button({
 	);
 }
 
-function RenderComponent() {
+function RenderComponent({gptInstruction}: {gptInstruction: any}) {
 	const [renderLoading, setRenderLoading] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -45,7 +45,7 @@ function RenderComponent() {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
-				variables: {},
+				variables: gptInstruction,
 				streamProgress: true,
 			}),
 		}).catch((e) => console.log(e));
@@ -93,15 +93,16 @@ function RenderComponent() {
 export default function Home() {
 	const [gptInstruction, setGptInstruction] = useState('');
 	const [gptResponse, setGptResponse] = useState({});
+	const [assets, setAssets] = useState({assets: []});
 	const [gptLoading, setGptLoading] = useState(false);
 	const [selectedOption, setSelectedOption] = useState('');
 
 	async function handleSendInstruction() {
 		setGptLoading(true);
 		try {
-			const response = await sendInstructionToGPT(gptInstruction, gptResponse);
-			console.log(response);
-			setGptResponse(response);
+			const response = await sendInstructionToGPT(gptInstruction, gptResponse, assets);
+			setGptResponse(response.sceneState);
+			setAssets(response.assetState);
 		} catch (error) {
 			console.error('Error sending instruction:', error);
 			setGptResponse('An error occurred while processing your request.');
@@ -125,7 +126,8 @@ export default function Home() {
 						type="text"
 						value={gptInstruction}
 						onChange={(e) => setGptInstruction(e.target.value)}
-						className="rounded-md p-2 bg-gray-200 focus:outline-none placeholder:text-gray-400 w-full"
+						className="rounded-md p-2 bg-gray-200 focus:outline-none placeholder:text-gray-400 w-full" // Add w-full for TailwindCSS or equivalent
+						style={{width: '100%'}} // For non-TailwindCSS, ensure full width
 						placeholder="Enter your instruction for GPT-4"
 					/>
 					<select
@@ -138,15 +140,21 @@ export default function Home() {
 						</option>
 						<option value="hello-world">Hello World</option>
 						<option value="background-video">Background Video</option>
+						<option value="external-image">External Image</option>
 					</select>
 					<Button onClick={handleSendInstruction} loading={gptLoading}>
 						Send Instruction
 					</Button>
 				</div>
-				{gptResponse && (
-					<div className="mt-4 p-4 bg-gray-100 rounded-md">
-						<strong>Response:</strong> {JSON.stringify(gptResponse)}
-					</div>
+				{gptResponse && assets && (
+					<>
+						<div className="mt-4 p-4 bg-gray-100 rounded-md">
+							<strong>Response:</strong> {JSON.stringify(gptResponse)}
+						</div>
+						<div className="mt-4 p-4 bg-gray-100 rounded-md">
+							<strong>Assets:</strong> {JSON.stringify(assets)}
+						</div>
+					</>
 				)}
 				<div>
 					<div className="rounded-lg overflow-hidden">
@@ -154,7 +162,7 @@ export default function Home() {
 						<Player project={project} controls={true} variables={{sceneDefinition: gptResponse}} />
 					</div>
 				</div>
-				<RenderComponent />
+				<RenderComponent gptInstruction={gptResponse} />
 			</div>
 		</>
 	);
