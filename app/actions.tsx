@@ -57,7 +57,7 @@ export interface AppearAnimation {
 	duration: number;
 }
 
-export type Length = number | `${number}%`;
+export type Length = number | \`\${number}%\`;
 
 export interface TextObject extends BaseSceneObject {
 	type: 'text';
