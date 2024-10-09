@@ -28,15 +28,7 @@ function Button({
 	);
 }
 
-function RenderComponent({
-	stargazerTimes,
-	repoName,
-	repoImage,
-}: {
-	stargazerTimes: number[];
-	repoName: string;
-	repoImage: string | null | undefined;
-}) {
+function RenderComponent() {
 	const [renderLoading, setRenderLoading] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -53,11 +45,7 @@ function RenderComponent({
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
-				variables: {
-					data: stargazerTimes.length ? stargazerTimes : undefined,
-					repoName: repoName || undefined,
-					repoImage: repoImage || undefined,
-				},
+				variables: {},
 				streamProgress: true,
 			}),
 		}).catch((e) => console.log(e));
@@ -103,72 +91,70 @@ function RenderComponent({
 }
 
 export default function Home() {
-	const [repoName, setRepoName] = useState<string>('');
-	const [repoImage, setRepoImage] = useState<string | null>();
-	const [stargazerTimes, setStargazerTimes] = useState<number[]>([]);
+	const [gptInstruction, setGptInstruction] = useState('');
+	const [gptResponse, setGptResponse] = useState({});
+	const [gptLoading, setGptLoading] = useState(false);
+	const [selectedOption, setSelectedOption] = useState('');
 
-	const [githubLoading, setGithubLoading] = useState(false);
-	const [needsKey, setNeedsKey] = useState(false);
-	const [key, setKey] = useState('');
-	const [error, setError] = useState<string | null>();
+	async function handleSendInstruction() {
+		setGptLoading(true);
+		try {
+			const response = await sendInstructionToGPT(gptInstruction, gptResponse);
+			console.log(response);
+			setGptResponse(response);
+		} catch (error) {
+			console.error('Error sending instruction:', error);
+			setGptResponse('An error occurred while processing your request.');
+		} finally {
+			setGptLoading(false);
+		}
+	}
 
-    const [gptInstruction, setGptInstruction] = useState('');
-    const [gptResponse, setGptResponse] = useState({});
-    const [gptLoading, setGptLoading] = useState(false);
-
-    async function handleSendInstruction() {
-        setGptLoading(true);
-        try {
-            const response = await sendInstructionToGPT(gptInstruction, gptResponse);
-            setGptResponse(response);
-        } catch (error) {
-            console.error('Error sending instruction:', error);
-            setGptResponse('An error occurred while processing your request.');
-        } finally {
-            setGptLoading(false);
-        }
-    }
-
+	async function handleSelectDefault(name: string) {
+		setSelectedOption(name);
+		const exampleObject = await fetch(`/api/example/${name}`).then((res) => res.json());
+		console.log(exampleObject);
+		setGptResponse(exampleObject);
+	}
 
 	return (
 		<>
 			<div className="m-auto p-12 max-w-7xl flex flex-col gap-y-4">
-			<div>
-                    <input
-                        type="text"
-                        value={gptInstruction}
-                        onChange={(e) => setGptInstruction(e.target.value)}
-                        className="rounded-md p-2 bg-gray-200 focus:outline-none placeholder:text-gray-400 w-full" // Add w-full for TailwindCSS or equivalent
-                        style={{ width: '100%' }} // For non-TailwindCSS, ensure full width
-                        placeholder="Enter your instruction for GPT-4"
-                    />
-                    <button
-                        onClick={handleSendInstruction}
-                        className="ml-2 rounded-md p-2 bg-blue-500 text-white hover:bg-blue-600"
-                    >
-                        Send Instruction
-                    </button>
-                </div>
-                {gptResponse && (
-                    <div className="mt-4 p-4 bg-gray-100 rounded-md">
-                        <strong>Response:</strong> {JSON.stringify(gptResponse)}
-                    </div>
-                )}
+				<div>
+					<input
+						type="text"
+						value={gptInstruction}
+						onChange={(e) => setGptInstruction(e.target.value)}
+						className="rounded-md p-2 bg-gray-200 focus:outline-none placeholder:text-gray-400 w-full"
+						placeholder="Enter your instruction for GPT-4"
+					/>
+					<select
+						value={selectedOption}
+						onChange={(e) => handleSelectDefault(e.target.value)}
+						className="rounded-md p-2 bg-gray-200 focus:outline-none"
+					>
+						<option value="" disabled>
+							Select an example
+						</option>
+						<option value="hello-world">Hello World</option>
+						<option value="background-video">Background Video</option>
+					</select>
+					<Button onClick={handleSendInstruction} loading={gptLoading}>
+						Send Instruction
+					</Button>
+				</div>
+				{gptResponse && (
+					<div className="mt-4 p-4 bg-gray-100 rounded-md">
+						<strong>Response:</strong> {JSON.stringify(gptResponse)}
+					</div>
+				)}
 				<div>
 					<div className="rounded-lg overflow-hidden">
 						{/* You can find the scene code inside revideo/src/scenes/example.tsx */}
-						<Player
-							project={project}
-							controls={true}
-							variables={{sceneDefinition: gptResponse}}
-						/>
+						<Player project={project} controls={true} variables={{sceneDefinition: gptResponse}} />
 					</div>
 				</div>
-				<RenderComponent
-					stargazerTimes={stargazerTimes}
-					repoName={repoName}
-					repoImage={repoImage}
-				/>
+				<RenderComponent />
 			</div>
 		</>
 	);
