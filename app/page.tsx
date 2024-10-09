@@ -6,6 +6,7 @@ import {useState} from 'react';
 import {LoaderCircle} from 'lucide-react';
 import {parseStream} from '../utils/parse';
 import project from '@/revideo/project';
+import {AssetState} from '@/revideo/scene';
 
 function Button({
 	children,
@@ -93,7 +94,37 @@ function RenderComponent({gptInstruction}: {gptInstruction: any}) {
 export default function Home() {
 	const [gptInstruction, setGptInstruction] = useState('');
 	const [gptResponse, setGptResponse] = useState({});
-	const [assets, setAssets] = useState({assets: []});
+	const [assets, setAssets] = useState<AssetState>({
+		assets: [
+			{
+				type: 'ai_image',
+				instructions: {prompt: 'a dinosaur'},
+				properties: {filePath: '/dinosaur.jpg'},
+			},
+			{
+				type: 'voiceover',
+				instructions: {
+					text: 'Hello, World!',
+					voice: 'Sarah',
+				},
+				properties: {
+					filePath: '/revideo-rap.mp3',
+					words: [
+						{
+							word: 'Hello',
+							start: 0,
+							end: 1,
+						},
+						{
+							word: 'World',
+							start: 2,
+							end: 3,
+						},
+					],
+				},
+			},
+		],
+	});
 	const [gptLoading, setGptLoading] = useState(false);
 	const [selectedOption, setSelectedOption] = useState('');
 
@@ -141,6 +172,7 @@ export default function Home() {
 						<option value="hello-world">Hello World</option>
 						<option value="background-video">Background Video</option>
 						<option value="external-image">External Image</option>
+						<option value="scary-dino">Scary Dino</option>
 					</select>
 					<Button onClick={handleSendInstruction} loading={gptLoading}>
 						Send Instruction

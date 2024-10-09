@@ -1,0 +1,25 @@
+{
+	"objects": [
+		{
+			"type": "image",
+			"startTime": 0,
+			"endTime": 5,
+			"position": {"x": 0, "y": 0},
+			"color": "white",
+			"src": "/dinosaur.jpg",
+			"width": "100%",
+			"height": "100%"
+		},
+		{
+			"type": "text",
+			"startTime": 0,
+			"endTime": 5,
+			"position": {"x": 0, "y": 0},
+			"color": "green",
+			"fontSize": 100,
+			"fontFamily": "Luckiest Guy",
+			"textContent": "SCARYYY!!",
+			"appearInAnimation": {"type": "fade", "duration": 1}
+		}
+	]
+}

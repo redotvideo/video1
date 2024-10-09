@@ -1,15 +1,15 @@
 /** @jsxImportSource @revideo/2d/lib */
-import {Img, Layout, Rect, Txt, Video, View2D, makeScene2D} from '@revideo/2d';
+import {Audio, Img, Layout, Rect, Txt, Video, View2D, makeScene2D} from '@revideo/2d';
 import {all, Reference, createRef, useScene, chain, waitFor} from '@revideo/core';
 
 export interface SceneDefinition {
 	objects: SceneObject[];
 }
 
-type SceneObject = TextObject | ShapeObject | ImageObject | VideoObject;
+type SceneObject = TextObject | ShapeObject | ImageObject | VideoObject | AudioObject;
 
 export interface BaseSceneObject {
-	type: 'text' | 'rect' | 'image' | 'video';
+	type: 'text' | 'rect' | 'image' | 'video' | 'audio';
 	startTime: number; // at which second the object appears
 	endTime: number; // at which second the object disappears, has to be higher than startTime
 	position: {x: number; y: number}; // 0,0 is center of video. If you have a 1920x1080 video, the top right corner is {x: 960, y: -540}.
@@ -50,9 +50,14 @@ interface VideoObject extends BaseSceneObject {
 	type: 'video';
 	src: string;
 	videoStartTime?: number; // At which second the video should start playing. Defaults to 0.
-	duration: number; // For how long the video should play from the startTime in seconds.
 	height?: Length; // Optional height for the video. You may want to specify only one of them to maintain the aspect ratio.
 	width?: Length;
+}
+
+interface AudioObject extends BaseSceneObject {
+	type: 'audio';
+	src: string;
+	audioStartTime?: number; // At which second the audio should start playing. Defaults to 0.
 }
 
 interface Animation {
@@ -81,12 +86,10 @@ export interface AssetState {
 	assets: Asset[];
 }
 
-export interface Asset {
-	type: 'voiceover' | 'ai_image';
-	asset: VoiceoverAsset | AiImageAsset;
-}
+export type Asset = VoiceoverAsset | AiImageAsset;
 
 export interface VoiceoverAsset {
+	type: 'voiceover';
 	instructions: {
 		text: string;
 		voice: 'Sarah' | 'Michael';
@@ -98,6 +101,7 @@ export interface VoiceoverAsset {
 }
 
 export interface AiImageAsset {
+	type: 'ai_image';
 	instructions: {
 		prompt: string;
 	};
@@ -139,6 +143,7 @@ const objectTypes = {
 	rect: Rect,
 	image: Img,
 	video: Video,
+	audio: Audio,
 };
 
 const appearAnimation = {
@@ -172,6 +177,7 @@ function* showElement(view: View2D, object: SceneObject) {
 			text: object.textContent,
 			fontSize: object.fontSize,
 			fontFamily: object.fontFamily,
+			fill: object.color,
 		};
 	}
 	if (object.type === 'rect') {
@@ -198,6 +204,14 @@ function* showElement(view: View2D, object: SceneObject) {
 			play: true,
 			...(object.width && {width: object.width}),
 			...(object.height && {height: object.height}),
+		};
+	}
+	if (object.type === 'audio') {
+		props = {
+			...props,
+			src: object.src,
+			time: object.audioStartTime || 0,
+			play: true,
 		};
 	}
 

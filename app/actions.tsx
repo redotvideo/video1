@@ -246,13 +246,11 @@ async function handleAssetGeneration(assets: Asset[]): Promise<Asset[]> {
 	const generatedAssets = [];
 	for (const a of assets) {
 		if (a.type === 'ai_image') {
-			const aiImageAsset = a.asset as AiImageAsset;
-			const asset = await generateImage(aiImageAsset.instructions);
+			const asset = await generateImage(a.instructions);
 			generatedAssets.push(asset);
 		}
 		if (a.type === 'voiceover') {
-			const voiceoverAsset = a.asset as VoiceoverAsset;
-			const asset = await voiceover(voiceoverAsset.instructions);
+			const asset = await voiceover(a.instructions);
 			generatedAssets.push(asset);
 		}
 	}
@@ -260,18 +258,14 @@ async function handleAssetGeneration(assets: Asset[]): Promise<Asset[]> {
 	return generatedAssets;
 }
 
-async function generateImage({
-	prompt,
-}: AiImageAsset['instructions']): Promise<{type: 'ai_image'; asset: AiImageAsset}> {
+async function generateImage({prompt}: AiImageAsset['instructions']): Promise<AiImageAsset> {
 	const jobId = crypto.randomUUID();
 	const filePath = `./public/${jobId}-image.png`;
 
 	return {
 		type: 'ai_image',
-		asset: {
-			instructions: {prompt},
-			properties: {filePath},
-		},
+		instructions: {prompt},
+		properties: {filePath},
 	};
 }
 
@@ -298,7 +292,7 @@ function findOutermostJSON(str: string): string | null {
 export async function voiceover({
 	text,
 	voice,
-}: VoiceoverAsset['instructions']): Promise<{type: 'voiceover'; asset: VoiceoverAsset}> {
+}: VoiceoverAsset['instructions']): Promise<VoiceoverAsset> {
 	const jobId = crypto.randomUUID();
 	const filePath = `./public/${jobId}-audio.wav`;
 	await generateAudio(text, voice, filePath);
@@ -309,10 +303,8 @@ export async function voiceover({
 
 	return {
 		type: 'voiceover',
-		asset: {
-			instructions: {text, voice: voice as any},
-			properties: {filePath, words},
-		},
+		instructions: {text, voice: voice as any},
+		properties: {filePath, words},
 	};
 }
 
