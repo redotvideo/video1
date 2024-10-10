@@ -10,5 +10,50 @@
 			"fontFamily": "Roboto",
 			"textContent": "hello world"
 		}
+	],
+	"assets": [
+		{
+			"type": "ai_image",
+			"instructions": {
+				"prompt": "a dinosaur"
+			},
+			"properties": {
+				"filePath": "/dinosaur.jpg"
+			}
+		},
+		{
+			"type": "voiceover",
+			"instructions": {
+				"text": "Hello, World!",
+				"voice": "Sarah"
+			},
+			"properties": {
+				"filePath": "/revideo-rap.mp3",
+				"words": [
+					{
+						"word": "Hello",
+						"start": 0,
+						"end": 1
+					},
+					{
+						"word": "World",
+						"start": 2,
+						"end": 3
+					}
+				]
+			}
+		}
+	],
+	"chat": [
+		{
+			"type": "user",
+			"text": "Please create a video with some dinosaur images underlayed with a voiceover describing the T-Rex."
+		},
+		{
+			"type": "agent",
+			"loading": false,
+			"tools": ["Text2Speech", "ImageGen"],
+			"changesMade": {"linesAdded": 102, "linesRemoved": 0}
+		}
 	]
 }

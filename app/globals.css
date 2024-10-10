@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*@font-face {
+	font-family: 'Ponde';
+	src: url('/ponde.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@layer utilities {
+	.font-ponde {
+		font-family: 'Ponde', system-ui, sans-serif;
+	}
+}
+*/

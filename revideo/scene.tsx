@@ -5,12 +5,13 @@ import {
 	Animation,
 	MoveToAnimationOptions,
 	OpacityAnimationOptions,
+	RotationAnimationOptions,
 	ScaleAnimationOptions,
 	SceneDefinition,
 	SceneObject,
 	SubtitleObject,
 } from './types';
-import {displayWords, textSettings} from './subtitle';
+import {displayWords, textSettingsFunky, textSettingsCool, textSettingsSerious} from './subtitle';
 
 export default makeScene2D('main', function* (view) {
 	// Get variables
@@ -57,9 +58,30 @@ function* showElement(view: View2D, object: SceneObject) {
 
 	if (object.type === 'subtitle') {
 		// TODO: do
-		const layoutRef = createRef<Layout>();
-		view.add(<Layout size="100%" ref={layoutRef} />);
-		yield* displayWords(layoutRef, object.words, textSettings);
+
+		console.log('style', object.style);
+
+		if (object.style === 'funky') {
+			const layoutRef = createRef<Layout>();
+			view.add(<Layout size="100%" ref={layoutRef} zIndex={100} />);
+
+			yield* displayWords(layoutRef, object.words, textSettingsFunky);
+		}
+
+		if (object.style === 'cool') {
+			const layoutRef = createRef<Layout>();
+			view.add(<Layout size="100%" ref={layoutRef} zIndex={100} y={300} />);
+
+			yield* displayWords(layoutRef, object.words, textSettingsCool);
+		}
+
+		if (object.style === 'serious') {
+			const layoutRef = createRef<Layout>();
+			view.add(<Layout size="100%" ref={layoutRef} zIndex={100} y={350} />);
+
+			yield* displayWords(layoutRef, object.words, textSettingsSerious);
+		}
+
 		return;
 	}
 
@@ -68,9 +90,8 @@ function* showElement(view: View2D, object: SceneObject) {
 
 	const ref = createRef() as Reference<typeof Component>;
 
+	console.log('ooooo', object);
 	let props: any = {
-		x: object.position.x,
-		y: object.position.y,
 		ref,
 	};
 
@@ -81,7 +102,11 @@ function* showElement(view: View2D, object: SceneObject) {
 			text: object.textContent,
 			fontSize: object.fontSize,
 			fontFamily: object.fontFamily,
+			zIndex: object.zIndex,
 			fill: object.color,
+			x: object.position.x,
+			y: -object.position.y,
+			textAlign: object.textAlign,
 		};
 	}
 	if (object.type === 'rect') {
@@ -90,14 +115,20 @@ function* showElement(view: View2D, object: SceneObject) {
 			width: object.width,
 			height: object.height,
 			fill: object.color,
+			zIndex: object.zIndex,
+			x: object.position.x,
+			y: -object.position.y,
 		};
 	}
 	if (object.type === 'image') {
 		props = {
 			...props,
 			src: object.src,
+			zIndex: object.zIndex,
 			...(object.width && {width: object.width}),
 			...(object.height && {height: object.height}),
+			x: object.position.x,
+			y: -object.position.y,
 		};
 	}
 	if (object.type === 'video') {
@@ -106,8 +137,11 @@ function* showElement(view: View2D, object: SceneObject) {
 			src: object.src,
 			time: object.videoStartTime || 0,
 			play: true,
+			zIndex: object.zIndex,
 			...(object.width && {width: object.width}),
 			...(object.height && {height: object.height}),
+			x: object.position.x,
+			y: -object.position.y,
 		};
 	}
 
@@ -184,6 +218,16 @@ function buildAnimations(ref: Reference<Layout>, animations: Animation[], elemen
 				),
 			);
 		}
+
+		if (ani.type === 'rotation') {
+			const animationOptions = ani.options as RotationAnimationOptions;
+			animationGenerators.push(
+				chain(
+					waitFor(waitTime),
+					rotate(ref, animationOptions.degrees, ani.endTime - ani.startTime),
+				),
+			);
+		}
 	}
 
 	return animationGenerators;
@@ -236,4 +280,8 @@ function* moveTo(ref: Reference<Layout>, x: number, y: number, duration: number)
 		ref().position.x(ref().position.x() + x, duration),
 		ref().position.y(ref().position.y() + y, duration),
 	);
+}
+
+function* rotate(ref: Reference<Layout>, degrees: number, duration: number) {
+	yield* ref().rotation(degrees, duration);
 }
