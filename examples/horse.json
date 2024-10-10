@@ -1,0 +1,84 @@
+{
+	"assets": [
+		{
+			"type": "ai_image",
+			"instructions": {"prompt": "A horse wearing a hat"},
+			"properties": {"filePath": "3b5f5b75-c644-4725-8825-08d6f539512a-image.png"}
+		},
+		{
+			"type": "voiceover",
+			"instructions": {"text": "the horse very much likes the hat", "voice": "Sarah"},
+			"properties": {
+				"filePath": "efb22aa2-da08-4efb-936f-2632863065b9-audio.wav",
+				"words": [
+					{"word": "The", "start": 0.08, "end": 0.32},
+					{"word": "horse", "start": 0.32, "end": 0.64},
+					{"word": "very", "start": 0.64, "end": 0.88},
+					{"word": "much", "start": 0.88, "end": 1.04},
+					{"word": "likes", "start": 1.04, "end": 1.28},
+					{"word": "the", "start": 1.28, "end": 1.52},
+					{"word": "hat.", "start": 1.52, "end": 1.99}
+				]
+			}
+		}
+	],
+	"chat": [
+		{
+			"type": "user",
+			"text": "please add a background image of a horse wearing a hat for 5 seconds"
+		},
+		{
+			"type": "agent",
+			"loading": false,
+			"tools": [],
+			"changesMade": {"linesAdded": 0, "linesRemoved": 0}
+		},
+		{"type": "user", "text": "add a voiceover saying \"the horse very much likes the hat\""},
+		{
+			"type": "agent",
+			"loading": false,
+			"tools": [],
+			"changesMade": {"linesAdded": 0, "linesRemoved": 0}
+		},
+		{"type": "user", "text": "add subtitles for the voiceover"},
+		{
+			"type": "agent",
+			"loading": false,
+			"tools": [],
+			"changesMade": {"linesAdded": 0, "linesRemoved": 0}
+		}
+	],
+	"objects": [
+		{
+			"type": "image",
+			"startTime": 0,
+			"endTime": 5,
+			"position": {"x": 0, "y": 0},
+			"color": "white",
+			"src": "3b5f5b75-c644-4725-8825-08d6f539512a-image.png",
+			"width": "100%",
+			"height": "100%"
+		},
+		{
+			"type": "audio",
+			"startTime": 0,
+			"endTime": 2,
+			"position": {"x": 0, "y": 0},
+			"color": "white",
+			"src": "efb22aa2-da08-4efb-936f-2632863065b9-audio.wav"
+		},
+		{
+			"type": "subtitle",
+			"startTime": 0,
+			"words": [
+				{"word": "The", "start": 0.08, "end": 0.32},
+				{"word": "horse", "start": 0.32, "end": 0.64},
+				{"word": "very", "start": 0.64, "end": 0.88},
+				{"word": "much", "start": 0.88, "end": 1.04},
+				{"word": "likes", "start": 1.04, "end": 1.28},
+				{"word": "the", "start": 1.28, "end": 1.52},
+				{"word": "hat.", "start": 1.52, "end": 1.99}
+			]
+		}
+	]
+}

@@ -13,7 +13,7 @@ import {
 	StockImageAsset,
 	StockVideoAsset,
 	VoiceoverAsset,
-} from '../revideo/types';
+} from '@/revideo/types';
 import {Store} from '@/components/save-restore';
 
 const deepgram = createClient(process.env['DEEPGRAM_API_KEY'] || '');
@@ -318,12 +318,7 @@ async function sendInstructionToGPTInner(instruction: string, state: Store) {
 	console.log('sending instruction', buildInstruction(instruction, state.objects, state.assets));
 	const chatCompletion = await openai.chat.completions.create({
 		model: 'o1-preview',
-		messages: [
-			{
-				role: 'user',
-				content: buildInstruction(instruction, {objects: state.objects}, state.assets),
-			},
-		],
+		messages: [{role: 'user', content: buildInstruction(instruction, state.objects, state.assets)}],
 	});
 
 	const response = chatCompletion.choices[0].message.content;
@@ -343,25 +338,21 @@ async function sendInstructionToGPTInner(instruction: string, state: Store) {
 
 export async function sendInstructionToGptNew(instruction: string, state: Store) {
 	// Make sure the new state remains available to us as we update it
-	let jsonString = await sendInstructionToGPTInner(instruction, state);
+	let currentState = state;
+
+	let jsonString = await sendInstructionToGPTInner(instruction, currentState);
 	let jsonResponse = JSON.parse(jsonString);
 
-	while (true) {
-		console.log('Running generation loop');
-
-		if (jsonResponse.objects) {
-			return jsonResponse as SceneDefinition;
-		}
-		if (jsonResponse.assets) {
-			const newAssets = await handleAssetGeneration(jsonResponse.assets);
-			const updatedAssets = [...state.assets, ...newAssets];
-			return {assets: updatedAssets};
-		}
-
-		throw new Error(
-			"error in gpt response, it didn't use tool but it also didn't respond with a video json",
-		);
+	if (jsonResponse.objects) {
+		return jsonResponse as SceneDefinition;
 	}
+	if (jsonResponse.assets) {
+		return jsonResponse as {assets: Asset[]};
+	}
+
+	throw new Error(
+		"error in gpt response, it didn't use tool but it also didn't respond with a video json",
+	);
 }
 
 async function handleAssetGeneration(assets: Asset[]): Promise<Asset[]> {
