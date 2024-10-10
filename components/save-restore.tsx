@@ -1,5 +1,5 @@
 import {Asset, SceneDefinition} from '@/revideo/types';
-import {AgentResponse, UserMessage} from '../app/new-ui/chat';
+import {AgentResponse, UserMessage} from '../app/chat';
 import {useEffect, useState} from 'react';
 
 export interface Store extends SceneDefinition {

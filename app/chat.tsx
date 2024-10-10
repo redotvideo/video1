@@ -1,6 +1,6 @@
 import {useState} from 'react';
-import {Store} from '../../components/save-restore';
-import {sendInstructionToGptNew} from '../actions';
+import {Store} from '../components/save-restore';
+import {sendInstructionToGptNew} from './actions';
 import {diffLines} from 'diff'; // Add this import at the top of the file
 
 function UserMessage({text}: UserMessage) {
