@@ -2,6 +2,7 @@
 
 import {Chat} from './chat';
 import {JsonEditor} from '@/components/json-editor';
+import {RenderButton} from '@/components/render-button';
 import {SaveRestore, Store} from '@/components/save-restore';
 import project from '@/revideo/project';
 import {Player} from '@revideo/player-react';
@@ -39,19 +40,22 @@ export default function Home() {
 						<div>
 							<Player project={project} variables={{sceneDefinition: {objects: state.objects}}} />
 						</div>
-						<div className="flex border-b">
-							<button
-								className={`px-4 py-2 ${activeTab === 'assets' ? 'bg-gray-200' : ''}`}
-								onClick={() => setActiveTab('assets')}
-							>
-								Assets
-							</button>
-							<button
-								className={`px-4 py-2 ${activeTab === 'objects' ? 'bg-gray-200' : ''}`}
-								onClick={() => setActiveTab('objects')}
-							>
-								Objects
-							</button>
+						<div className="flex justify-between border-b">
+							<div className="flex">
+								<button
+									className={`px-4 py-2 ${activeTab === 'assets' ? 'bg-gray-200' : ''}`}
+									onClick={() => setActiveTab('assets')}
+								>
+									Assets
+								</button>
+								<button
+									className={`px-4 py-2 ${activeTab === 'objects' ? 'bg-gray-200' : ''}`}
+									onClick={() => setActiveTab('objects')}
+								>
+									Objects
+								</button>
+							</div>
+							<RenderButton state={state} />
 						</div>
 						<div className="flex-grow overflow-auto">
 							{activeTab === 'assets' ? (
