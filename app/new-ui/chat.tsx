@@ -33,6 +33,7 @@ function AgentResponse({loading, tools, changesMade}: AgentResponse) {
 							{'-'} {tool}
 						</li>
 					))}
+					{tools.length === 0 && <li>No tools used</li>}
 				</ul>
 			</div>
 			<div className="text-sm mb-2 text-gray-700">Diff applied to JSON</div>

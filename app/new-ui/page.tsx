@@ -22,16 +22,43 @@ export default function Home() {
 		}));
 	}
 
+	function setObjects(objects: Store['objects']) {
+		setState((v) => ({
+			...v,
+			objects,
+		}));
+	}
+
+	const [activeTab, setActiveTab] = useState<'assets' | 'objects'>('assets');
+
 	return (
 		<div className="h-screen w-screen flex">
 			<PanelGroup direction="horizontal" className="w-full">
 				<Panel defaultSize={60} minSize={20}>
 					<div className="h-full flex flex-col">
-						<div className="flex-grow">
+						<div>
 							<Player project={project} variables={{sceneDefinition: {objects: state.objects}}} />
 						</div>
+						<div className="flex border-b">
+							<button
+								className={`px-4 py-2 ${activeTab === 'assets' ? 'bg-gray-200' : ''}`}
+								onClick={() => setActiveTab('assets')}
+							>
+								Assets
+							</button>
+							<button
+								className={`px-4 py-2 ${activeTab === 'objects' ? 'bg-gray-200' : ''}`}
+								onClick={() => setActiveTab('objects')}
+							>
+								Objects
+							</button>
+						</div>
 						<div className="flex-grow overflow-auto">
-							<JsonEditor jsonData={state.assets} setJsonData={setAssets} />
+							{activeTab === 'assets' ? (
+								<JsonEditor jsonData={state.assets} setJsonData={setAssets} />
+							) : (
+								<JsonEditor jsonData={state.objects} setJsonData={setObjects} />
+							)}
 						</div>
 					</div>
 				</Panel>
